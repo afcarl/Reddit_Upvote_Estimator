@@ -7,11 +7,15 @@ Code Template
 """
 import logging
 
+import lib
+from reddit_scraper import scrape_subreddit
+
 
 def extract():
     # TODO Docstring
 
-    # TODO Extract all posts for given subreddit, going back given number of days
+    # Extract all posts for given subreddit, going back given number of days
+    scrape_subreddit(lib.get_conf('subreddit'), lib.get_conf('history_num_days'))
 
     # TODO Load embedding matrix
     pass
