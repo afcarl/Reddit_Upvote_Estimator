@@ -1,0 +1,5 @@
+data_schema_dir: ../data/schemas
+subreddit: JapanTravel
+history_num_days: 30
+client_secret: your_secret
+client_id: your_client_id

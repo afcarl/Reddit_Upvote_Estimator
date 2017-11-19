@@ -8,3 +8,7 @@
 
 # User-specific Idea / Pycharm files
 .idea/
+
+# Configuration files
+conf/*.yaml
+conf/*.yml

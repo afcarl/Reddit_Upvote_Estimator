@@ -7,17 +7,26 @@ Code Template
 """
 import logging
 
+import os
+
+import lib
+from reddit_scraper import scrape_subreddit
+
 
 def extract():
     # TODO Docstring
 
-    # TODO Extract all posts for given subreddit, going back given number of days
+    # Extract all posts for given subreddit, going back given number of days
+    posts = scrape_subreddit(lib.get_conf('subreddit'), lib.get_conf('history_num_days'))
 
     # TODO Load embedding matrix
-    pass
+    embedding_matrix = None
+    word_to_index = None
+    lib.archive_dataset_schemas('extract', locals(), globals())
+    return embedding_matrix, word_to_index, posts
 
 
-def transform(embedding_matrix, posts):
+def transform(embedding_matrix, word_to_index, posts):
     # TODO Docstring
 
     # TODO Bin number of upvotes
@@ -28,9 +37,9 @@ def transform(embedding_matrix, posts):
 
     # TODO One hot encode response (up votes)
 
-    pass
+    return embedding_matrix, word_to_index, posts
 
-def model(embedding_matrix, posts):
+def model(embedding_matrix, word_to_index, posts):
     # TODO Docstring
 
     # TODO Reference variables
@@ -41,13 +50,17 @@ def model(embedding_matrix, posts):
 
     # TODO Create and compile architecture
 
-    pass
+    return embedding_matrix, word_to_index, posts, None
 
 
-def load(embedding_matrix, posts, model):
+def load(embedding_matrix, word_to_index, posts, network):
     # TODO Docstring
 
     # TODO Output observations with true labels, expected labels
+    posts_csv_path = os.path.join(lib.get_temp_dir(), 'posts.csv')
+    posts.to_csv(path_or_buf=posts_csv_path, index=False)
+    logging.info('Dataset written to file: {}'.format(posts_csv_path))
+    print('Dataset written to file: {}'.format(posts_csv_path))
 
     # TODO Output summary metrics
     pass
@@ -61,11 +74,13 @@ def main():
     """
     logging.basicConfig(level=logging.DEBUG)
 
-    embedding_matrix, posts = extract()
+    embedding_matrix, word_to_index, posts = extract()
 
-    embedding_matrix, posts, model = transform(embedding_matrix, posts)
+    embedding_matrix, word_to_index, posts = transform(embedding_matrix, word_to_index, posts)
 
-    load(embedding_matrix, posts, model)
+    embedding_matrix, word_to_index, posts, network = model(embedding_matrix, word_to_index, posts)
+
+    load(embedding_matrix, word_to_index, posts, network)
 
     pass
 
