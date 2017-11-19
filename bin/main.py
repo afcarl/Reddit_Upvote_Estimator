@@ -5,42 +5,78 @@ coding=utf-8
 Code Template
 
 """
+import cPickle
 import logging
-
 import os
 
+import numpy
+from gensim.utils import simple_preprocess
+
 import lib
+import models
+import resources
 from reddit_scraper import scrape_subreddit
+
 
 
 def extract():
     # TODO Docstring
 
+    logging.info('Begin extract')
+
     # Extract all posts for given subreddit, going back given number of days
-    posts = scrape_subreddit(lib.get_conf('subreddit'), lib.get_conf('history_num_days'))
+    logging.info('Downloading submissions from Reddit')
+    observations = scrape_subreddit(lib.get_conf('subreddit'), lib.get_conf('history_num_days'))
+    logging.info('Found {} submissions'.format(len(observations.index)))
 
-    # TODO Load embedding matrix
-    embedding_matrix = None
-    word_to_index = None
+    # Load embedding matrix
+    resources.download_embedding()
+    embedding_matrix, word_to_index = resources.create_embedding_matrix()
+    logging.info('word_to_index max index: {}'.format(max(word_to_index.values())))
+
+    logging.info('End extract')
     lib.archive_dataset_schemas('extract', locals(), globals())
-    return embedding_matrix, word_to_index, posts
+    return embedding_matrix, word_to_index, observations
 
 
-def transform(embedding_matrix, word_to_index, posts):
+def transform(embedding_matrix, word_to_index, observations):
     # TODO Docstring
+    logging.info('Begin transform')
 
-    # TODO Bin number of upvotes
+    # TODO Shuffle upvotes234
 
-    # TODO Simple pre-processing, lemmatization, and stopword removal
+    # Response: Bin number of upvotes
+    bins_maxes = [0, 10, 50, 100, numpy.inf]
 
-    # TODO Convert text to indices
+    observations['bin_max'] = map(lambda x: bins_maxes[x], numpy.digitize(observations['ups'].tolist(), bins=bins_maxes))
 
-    # TODO One hot encode response (up votes)
+    # Response: One hot encode response (up votes)
+    label_encoder = lib.create_label_encoder(sorted(set(observations['bin_max'])))
+    observations['response'] = observations['bin_max'].apply(lambda x: label_encoder[x])
 
-    return embedding_matrix, word_to_index, posts
+    # Input: Create text field
+    observations['text'] = observations['title'] + ' ' + observations['selftext']
 
-def model(embedding_matrix, word_to_index, posts):
+    # Input: Simple pre-processing
+    observations['tokens'] = observations['text'].apply(simple_preprocess)
+
+    # Input: Convert text to indices
+    observations['indices'] = observations['tokens'].apply(lambda token_list: map(lambda token: word_to_index[token],
+                                                                                  token_list))
+
+    # Input: Pad indices list with zeros, so that every article's list of indices is the same length
+    observations['padded_indices'] = observations['indices'].apply(lib.pad_sequence)
+
+    # Set up modeling input
+    observations['modeling_input'] = observations['padded_indices']
+
+    logging.info('End transform')
+    lib.archive_dataset_schemas('transform', locals(), globals())
+    return embedding_matrix, word_to_index, observations
+
+def model(embedding_matrix, word_to_index, observations):
     # TODO Docstring
+    logging.info('Begin model')
 
     # TODO Reference variables
 
@@ -49,16 +85,62 @@ def model(embedding_matrix, word_to_index, posts):
     # TODO Architecture variables: Input and output dimmensions
 
     # TODO Create and compile architecture
+    logging.info('End model')
+    lib.archive_dataset_schemas('model', locals(), globals())
 
-    return embedding_matrix, word_to_index, posts, None
+
+    # Create train and test data sets
+
+    train_test_mask = numpy.random.random(size=len(observations.index))
+    num_train = sum(train_test_mask < .8)
+    num_validate = sum(train_test_mask >= .8)
+    logging.info('Proceeding w/ {} train observations, and {} test observations'.format(num_train, num_validate))
+
+    x_train = observations['modeling_input'][train_test_mask < .8].tolist()
+    y_train = observations['response'][train_test_mask < .8].tolist()
+    x_test = observations['modeling_input'][train_test_mask >= .8].tolist()
+    y_test = observations['response'][train_test_mask >= .8].tolist()
+
+    # Convert x and y vectors to numpy objects
+    x_train = numpy.array(x_train, dtype=object)
+    y_train = numpy.array(y_train)
+    x_test = numpy.array(x_test, dtype=object)
+    y_test = numpy.array(y_test)
+
+    logging.info('x_train shape: {}, y_train shape: {}, '
+                 'x_test shape: {}, y_test shape: {}'.format(x_train.shape, y_train.shape, x_test.shape, y_test.shape))
+
+    # If required, train model
+    if lib.get_conf('train_model'):
+        logging.info('Creating and training model')
+
+        embedding_input_length = x_train.shape[1]
+        output_shape = y_train.shape[1]
+
+        classification_model = models.gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_to_index)
+
+        # Train model
+        classification_model.fit(x_train, y_train, batch_size=128, epochs=20, validation_data=(x_test, y_test))
+
+        logging.info('Finished creating and training model')
+    else:
+        classification_model = None
+
+    # TODO Validate model
+
+    # Archive schema and return
+    lib.archive_dataset_schemas('transform', locals(), globals())
+    logging.info('End model')
+
+    return embedding_matrix, word_to_index, observations, classification_model
 
 
-def load(embedding_matrix, word_to_index, posts, network):
+def load(embedding_matrix, word_to_index, observations, network):
     # TODO Docstring
 
     # TODO Output observations with true labels, expected labels
     posts_csv_path = os.path.join(lib.get_temp_dir(), 'posts.csv')
-    posts.to_csv(path_or_buf=posts_csv_path, index=False)
+    observations.to_csv(path_or_buf=posts_csv_path, index=False)
     logging.info('Dataset written to file: {}'.format(posts_csv_path))
     print('Dataset written to file: {}'.format(posts_csv_path))
 
@@ -74,13 +156,19 @@ def main():
     """
     logging.basicConfig(level=logging.DEBUG)
 
-    embedding_matrix, word_to_index, posts = extract()
+    # Extract
+    embedding_matrix, word_to_index, observations = extract()
+    cPickle.dump(observations, open('../data/pickles/posts_extract.pkl', 'w+'))
 
-    embedding_matrix, word_to_index, posts = transform(embedding_matrix, word_to_index, posts)
+    # Transform
+    observations = cPickle.load(open('../data/pickles/posts_extract.pkl'))
+    embedding_matrix, word_to_index, observations = transform(embedding_matrix, word_to_index, observations)
 
-    embedding_matrix, word_to_index, posts, network = model(embedding_matrix, word_to_index, posts)
+    # Model
+    embedding_matrix, word_to_index, observations, network = model(embedding_matrix, word_to_index, observations)
 
-    load(embedding_matrix, word_to_index, posts, network)
+    # Load
+    load(embedding_matrix, word_to_index, observations, network)
 
     pass
 
