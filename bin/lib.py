@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import tempfile
 
 import numpy
 import pandas
@@ -10,6 +11,7 @@ from keras.preprocessing.sequence import pad_sequences
 # Global variables
 CONFS = None
 BATCH_NAME = None
+TEMP_DIR = None
 
 
 def load_confs(confs_path='../conf/conf.yaml'):
@@ -69,6 +71,13 @@ def get_batch_name():
         logging.info('Batch name: {}'.format(BATCH_NAME))
     return BATCH_NAME
 
+
+def get_temp_dir():
+    global TEMP_DIR
+    if TEMP_DIR is None:
+        TEMP_DIR = tempfile.mkdtemp(prefix='reddit_')
+        logging.info('Created temporary directory: {}'.format(TEMP_DIR))
+    return TEMP_DIR
 
 def archive_dataset_schemas(step_name, local_dict, global_dict):
     """

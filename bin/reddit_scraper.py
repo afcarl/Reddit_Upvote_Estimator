@@ -5,15 +5,13 @@ coding=utf-8
 Code Template
 
 """
-import logging
-
 import datetime
+import logging
 import pprint
+import time
 
+import pandas
 import praw
-import sys
-
-from praw.models import Submission
 
 import lib
 
@@ -40,23 +38,27 @@ def scrape_subreddit(subreddit_name, num_days):
 
     # Compute correct time range (current datetime - num_days to current datetime)
     end_datetime = datetime.datetime.utcnow()
+    end_datetime_unix = time.mktime(end_datetime.timetuple())
     start_datetime = end_datetime - datetime.timedelta(days=num_days)
+    start_datetime_unix = time.mktime(start_datetime.timetuple())
     logging.debug('Time range: {} to {}'.format(start_datetime, end_datetime))
 
     # Iterate through posts chronologically
-    for index, submission in enumerate(subreddit.new()):
+    for index, submission in enumerate(subreddit.submissions(start_datetime_unix, end_datetime_unix)):
         logging.info('Working number {}, submission: '.format(index, submission))
+
+        # Parse each submission and extract essential fields
         parsed_submission = submission_parser(submission)
+
+        # Add info from each post to aggregator
         parsed_submission_agg.append(parsed_submission)
 
+    # Create DataFrame from pulled data
+    posts = pandas.DataFrame(parsed_submission_agg)
 
-    # TODO Add info from each post to aggregator
+    # Return
+    return posts
 
-    # TODO Create DataFrame from pulled data
-
-    # TODO Return
-
-    pass
 
 def submission_parser(submission):
     # Reference variables

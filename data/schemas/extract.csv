@@ -1,0 +1,15 @@
+variable,type,data_set
+author,object,posts
+downs,object,posts
+id,object,posts
+likes,object,posts
+name,object,posts
+num_comments,object,posts
+over_18,object,posts
+score,object,posts
+selftext,object,posts
+spoiler,object,posts
+subreddit_name_prefixed,object,posts
+title,object,posts
+ups,object,posts
+url,object,posts
