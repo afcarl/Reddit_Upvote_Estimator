@@ -53,6 +53,8 @@ def scrape_subreddit(subreddit_name, num_days):
         # Add info from each post to aggregator
         parsed_submission_agg.append(parsed_submission)
 
+        if lib.get_conf('test_run') and index >= 49:
+            break
     # Create DataFrame from pulled data
     posts = pandas.DataFrame(parsed_submission_agg)
 

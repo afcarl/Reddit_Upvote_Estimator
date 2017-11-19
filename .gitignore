@@ -12,3 +12,9 @@
 # Configuration files
 conf/*.yaml
 conf/*.yml
+
+# Pickled intermediate files
+data/pickles/*
+
+# Saved resources
+resources/*

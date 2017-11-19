@@ -77,6 +77,7 @@ def get_temp_dir():
     if TEMP_DIR is None:
         TEMP_DIR = tempfile.mkdtemp(prefix='reddit_')
         logging.info('Created temporary directory: {}'.format(TEMP_DIR))
+        print('Created temporary directory: {}'.format(TEMP_DIR))
     return TEMP_DIR
 
 def archive_dataset_schemas(step_name, local_dict, global_dict):
