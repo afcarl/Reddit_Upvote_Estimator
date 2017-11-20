@@ -4,6 +4,6 @@ data_schema_dir: ../data/schemas
 client_secret: SECRET
 client_id: ID
 subreddit: JapanTravel
-history_num_days: 128
-max_sequence_length: 100
+history_num_days: 100
+max_sequence_length: 128
 train_model: True
