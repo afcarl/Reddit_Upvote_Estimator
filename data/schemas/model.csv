@@ -13,7 +13,7 @@ subreddit_name_prefixed,object,observations
 title,object,observations
 ups,object,observations
 url,object,observations
-bin_max,float64,observations
+bin_max,int64,observations
 response,object,observations
 text,object,observations
 tokens,object,observations
