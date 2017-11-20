@@ -102,7 +102,7 @@ def model(embedding_matrix, word_to_index, observations, label_encoder):
     y_test = observations['response'][train_test_mask >= .8].tolist()
 
     # Add train / validate label to observations
-    observations['training_step'] = map(lambda x: 'train' if x else 'test', train_test_mask)
+    observations['training_step'] = map(lambda x: 'train' if x < .8 else 'test', train_test_mask)
 
     # Convert x and y vectors to numpy objects
     x_train = numpy.array(x_train, dtype=object)
