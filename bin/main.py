@@ -101,6 +101,9 @@ def model(embedding_matrix, word_to_index, observations):
     x_test = observations['modeling_input'][train_test_mask >= .8].tolist()
     y_test = observations['response'][train_test_mask >= .8].tolist()
 
+    # Add train / validate label to observations
+    observations['training_step'] = map(lambda x: 'train' if x else 'test', train_test_mask)
+
     # Convert x and y vectors to numpy objects
     x_train = numpy.array(x_train, dtype=object)
     y_train = numpy.array(y_train)
@@ -128,9 +131,8 @@ def model(embedding_matrix, word_to_index, observations):
 
     # TODO Validate model
 
-    # TODO Add model prediction to observations
-
-    # TODO Add train / validate label to observations
+    # Add model prediction to observations
+    observations['modeling_prediction'] = classification_model.predict(observations['modeling_input'].tolist())
 
     # Archive schema and return
     lib.archive_dataset_schemas('transform', locals(), globals())
@@ -147,7 +149,6 @@ def load(embedding_matrix, word_to_index, observations, network):
     observations.to_csv(path_or_buf=posts_csv_path, index=False)
     logging.info('Dataset written to file: {}'.format(posts_csv_path))
     print('Dataset written to file: {}'.format(posts_csv_path))
-
 
     # TODO Serialize model, output encoder
     # TODO Output summary metrics
