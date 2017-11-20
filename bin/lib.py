@@ -175,3 +175,12 @@ def pad_sequence(sequence):
     """
     padded_sequence = pad_sequences([sequence], maxlen=get_conf('max_sequence_length'))[0]
     return padded_sequence
+
+
+def prop_to_label(x, label_encoder):
+    response_index = numpy.argmax(x)
+    index_lookup = dict()
+    for key, value in label_encoder.items():
+        index_lookup[numpy.argmax(value)] = key
+
+    return index_lookup[response_index]

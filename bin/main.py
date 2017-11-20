@@ -6,6 +6,7 @@ Code Template
 
 """
 import cPickle
+import csv
 import logging
 import os
 
@@ -72,9 +73,9 @@ def transform(embedding_matrix, word_to_index, observations):
 
     logging.info('End transform')
     lib.archive_dataset_schemas('transform', locals(), globals())
-    return embedding_matrix, word_to_index, observations
+    return embedding_matrix, word_to_index, observations, label_encoder
 
-def model(embedding_matrix, word_to_index, observations):
+def model(embedding_matrix, word_to_index, observations, label_encoder):
     # TODO Docstring
     logging.info('Begin model')
 
@@ -101,6 +102,9 @@ def model(embedding_matrix, word_to_index, observations):
     x_test = observations['modeling_input'][train_test_mask >= .8].tolist()
     y_test = observations['response'][train_test_mask >= .8].tolist()
 
+    # Add train / validate label to observations
+    observations['training_step'] = map(lambda x: 'train' if x < .8 else 'test', train_test_mask)
+
     # Convert x and y vectors to numpy objects
     x_train = numpy.array(x_train, dtype=object)
     y_train = numpy.array(y_train)
@@ -120,7 +124,7 @@ def model(embedding_matrix, word_to_index, observations):
         classification_model = models.gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_to_index)
 
         # Train model
-        classification_model.fit(x_train, y_train, batch_size=128, epochs=20, validation_data=(x_test, y_test))
+        classification_model.fit(x_train, y_train, batch_size=128, epochs=1, validation_data=(x_test, y_test))
 
         logging.info('Finished creating and training model')
     else:
@@ -128,21 +132,37 @@ def model(embedding_matrix, word_to_index, observations):
 
     # TODO Validate model
 
+    # Add model prediction to observations
+    preds = classification_model.predict(numpy.array(observations['modeling_input'].tolist(), dtype=object))
+    observations['max_probability'] = map(max, preds)
+    observations['modeling_prediction'] = map(lambda x: lib.prop_to_label(x, label_encoder), preds)
+
     # Archive schema and return
     lib.archive_dataset_schemas('transform', locals(), globals())
     logging.info('End model')
 
-    return embedding_matrix, word_to_index, observations, classification_model
+    return embedding_matrix, word_to_index, observations, label_encoder, classification_model
 
 
-def load(embedding_matrix, word_to_index, observations, network):
+def load(embedding_matrix, word_to_index, observations, label_encoder, network):
     # TODO Docstring
 
     # TODO Output observations with true labels, expected labels
     posts_csv_path = os.path.join(lib.get_temp_dir(), 'posts.csv')
-    observations.to_csv(path_or_buf=posts_csv_path, index=False)
+    observations.to_csv(path_or_buf=posts_csv_path, index=False, quoting=csv.QUOTE_ALL)
     logging.info('Dataset written to file: {}'.format(posts_csv_path))
     print('Dataset written to file: {}'.format(posts_csv_path))
+
+    # Serialize model
+    model_path = os.path.join(lib.get_temp_dir(), 'keras_model.h5')
+    network.save(model_path)
+    logging.info('Model written to file: {}'.format(model_path))
+    print('Model written to file: {}'.format(model_path))
+
+    # Serialize label encoder
+    label_encoder_path = os.path.join(lib.get_temp_dir(), 'label_encoder.pkl')
+    cPickle.dump(label_encoder, open(label_encoder_path, 'w+'))
+
 
     # TODO Output summary metrics
     pass
@@ -162,13 +182,13 @@ def main():
 
     # Transform
     observations = cPickle.load(open('../data/pickles/posts_extract.pkl'))
-    embedding_matrix, word_to_index, observations = transform(embedding_matrix, word_to_index, observations)
+    embedding_matrix, word_to_index, observations, label_encoder = transform(embedding_matrix, word_to_index, observations)
 
     # Model
-    embedding_matrix, word_to_index, observations, network = model(embedding_matrix, word_to_index, observations)
+    embedding_matrix, word_to_index, observations, label_encoder, network = model(embedding_matrix, word_to_index, observations, label_encoder)
 
     # Load
-    load(embedding_matrix, word_to_index, observations, network)
+    load(embedding_matrix, word_to_index, observations, label_encoder, network)
 
     pass
 

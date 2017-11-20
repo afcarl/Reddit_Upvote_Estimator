@@ -1,5 +1,9 @@
+test_run: True
+embedding_path: ../resources/GoogleNews-vectors-negative300.bin
 data_schema_dir: ../data/schemas
+client_secret: SECRET
+client_id: ID
 subreddit: JapanTravel
-history_num_days: 30
-client_secret: your_secret
-client_id: your_client_id
+history_num_days: 100
+max_sequence_length: 128
+train_model: True

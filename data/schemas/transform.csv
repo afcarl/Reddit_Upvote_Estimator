@@ -20,3 +20,6 @@ tokens,object,observations
 indices,object,observations
 padded_indices,object,observations
 modeling_input,object,observations
+training_step,object,observations
+max_probability,float64,observations
+modeling_prediction,float64,observations
