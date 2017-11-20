@@ -128,6 +128,10 @@ def model(embedding_matrix, word_to_index, observations):
 
     # TODO Validate model
 
+    # TODO Add model prediction to observations
+
+    # TODO Add train / validate label to observations
+
     # Archive schema and return
     lib.archive_dataset_schemas('transform', locals(), globals())
     logging.info('End model')
@@ -144,6 +148,8 @@ def load(embedding_matrix, word_to_index, observations, network):
     logging.info('Dataset written to file: {}'.format(posts_csv_path))
     print('Dataset written to file: {}'.format(posts_csv_path))
 
+
+    # TODO Serialize model, output encoder
     # TODO Output summary metrics
     pass
 
