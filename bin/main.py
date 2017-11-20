@@ -6,6 +6,7 @@ Code Template
 
 """
 import cPickle
+import csv
 import logging
 import os
 
@@ -148,11 +149,21 @@ def load(embedding_matrix, word_to_index, observations, label_encoder, network):
 
     # TODO Output observations with true labels, expected labels
     posts_csv_path = os.path.join(lib.get_temp_dir(), 'posts.csv')
-    observations.to_csv(path_or_buf=posts_csv_path, index=False)
+    observations.to_csv(path_or_buf=posts_csv_path, index=False, quoting=csv.QUOTE_ALL)
     logging.info('Dataset written to file: {}'.format(posts_csv_path))
     print('Dataset written to file: {}'.format(posts_csv_path))
 
-    # TODO Serialize model, output encoder
+    # Serialize model
+    model_path = os.path.join(lib.get_temp_dir(), 'keras_model.h5')
+    network.save(model_path)
+    logging.info('Model written to file: {}'.format(model_path))
+    print('Model written to file: {}'.format(model_path))
+
+    # Serialize label encoder
+    label_encoder_path = os.path.join(lib.get_temp_dir(), 'label_encoder.pkl')
+    cPickle.dump(label_encoder, open(label_encoder_path, 'w+'))
+
+
     # TODO Output summary metrics
     pass
 

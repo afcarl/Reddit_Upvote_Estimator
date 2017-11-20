@@ -41,7 +41,7 @@ def gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_
 
     sequence_input = keras.Input(shape=(embedding_input_length,), dtype='int32')
     embedded_sequences = embedding_layer(sequence_input)
-    x = Conv1D(128, 5, activation='relu')(x)
+    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
     x = MaxPooling1D(35)(x)
     x = Flatten()(x)
     x = Dense(128, activation='relu')(x)

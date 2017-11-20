@@ -58,3 +58,19 @@ Prioritized backlog:
  - Add functionality to add prediction to observations
  - Create more applicable model
  - Refactor Embedding code: Simple wrapper class that:
+
+## 2017-11-20
+
+Archiving
+
+ - Goals: 
+   - Archive probabilities, classification, classification as index
+   - Serialize model
+   - Serialize label encoder
+ - Only saving highest probability, classification as text
+ - Writing method to convert Keras output back to label
+ - Changing csv writer to quote all, due to raw text in dataset
+ - Following [Keras FAQ](https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model) for serializing a model
+ - Everything serialized to a path on my local machine: `/var/folders/c4/brlc3vgn5v1_pvdq0f57ws2m0000gn/T/reddit_fzJ5ra`
+ 
+ 
