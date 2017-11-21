@@ -68,9 +68,28 @@ Archiving
    - Serialize model
    - Serialize label encoder
  - Only saving highest probability, classification as text
- - Writing method to convert Keras output back to label
+ - Writing method to convert Kpdateeras output back to label
  - Changing csv writer to quote all, due to raw text in dataset
  - Following [Keras FAQ](https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model) for serializing a model
  - Everything serialized to a path on my local machine: `/var/folders/c4/brlc3vgn5v1_pvdq0f57ws2m0000gn/T/reddit_fzJ5ra`
  
+## 2017-11-21
+
+More applicable model
+
+Backlog:
+
+ - Vary number of layers
+ - Change / modify optimizer
+ - Identify other common text classification architectures
+ - Perform regression instead
+ - Change to another subreddit
+ - Custom embedding / add tags to delineate title
+ 
+Prioritized backlog
+
+ - Change / modify optimizer
+ - Vary number of layers
+ - Change to another subreddit
+   - Possibly [https://www.reddit.com/r/todayilearned/][https://www.reddit.com/r/todayilearned/]
  
