@@ -19,7 +19,6 @@ import resources
 from reddit_scraper import scrape_subreddit
 
 
-
 def extract():
     # TODO Docstring
 
@@ -50,6 +49,7 @@ def transform(embedding_matrix, word_to_index, observations):
     bins_maxes = [0, 10, 50, 100, numpy.inf]
 
     observations['bin_max'] = map(lambda x: bins_maxes[x], numpy.digitize(observations['ups'].tolist(), bins=bins_maxes))
+    logging.info('Bin breakdown: \n{}'.format(observations['bin_max'].value_counts()))
 
     # Response: One hot encode response (up votes)
     label_encoder = lib.create_label_encoder(sorted(set(observations['bin_max'])))
@@ -79,19 +79,9 @@ def model(embedding_matrix, word_to_index, observations, label_encoder):
     # TODO Docstring
     logging.info('Begin model')
 
-    # TODO Reference variables
-
-    # TODO Create train / test split
-
-    # TODO Architecture variables: Input and output dimmensions
-
-    # TODO Create and compile architecture
-    logging.info('End model')
     lib.archive_dataset_schemas('model', locals(), globals())
 
-
     # Create train and test data sets
-
     train_test_mask = numpy.random.random(size=len(observations.index))
     num_train = sum(train_test_mask < .8)
     num_validate = sum(train_test_mask >= .8)
@@ -124,7 +114,7 @@ def model(embedding_matrix, word_to_index, observations, label_encoder):
         classification_model = models.gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_to_index)
 
         # Train model
-        classification_model.fit(x_train, y_train, batch_size=128, epochs=1, validation_data=(x_test, y_test))
+        classification_model.fit(x_train, y_train, batch_size=512, epochs=5, validation_data=(x_test, y_test))
 
         logging.info('Finished creating and training model')
     else:
@@ -178,10 +168,8 @@ def main():
 
     # Extract
     embedding_matrix, word_to_index, observations = extract()
-    cPickle.dump(observations, open('../data/pickles/posts_extract.pkl', 'w+'))
 
     # Transform
-    observations = cPickle.load(open('../data/pickles/posts_extract.pkl'))
     embedding_matrix, word_to_index, observations, label_encoder = transform(embedding_matrix, word_to_index, observations)
 
     # Model

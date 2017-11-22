@@ -2,7 +2,8 @@ import logging
 
 import keras
 from keras import Model
-from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Embedding
+from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Embedding, Dropout
+from keras.optimizers import Adam
 
 
 def gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_to_index):
@@ -40,18 +41,29 @@ def gen_conv_model(embedding_input_length, output_shape, embedding_matrix, word_
                                 trainable=False)
 
     sequence_input = keras.Input(shape=(embedding_input_length,), dtype='int32')
-    embedded_sequences = embedding_layer(sequence_input)
-    x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-    x = MaxPooling1D(35)(x)
+    x = embedding_layer(sequence_input)
+    # x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+    # x = Dropout(rate=.5)(x)
+    # x = MaxPooling1D(35)(x)
     x = Flatten()(x)
-    x = Dense(128, activation='relu')(x)
+    # x = Dropout(rate=.5)(x)
+    # x = Dense(128, activation='relu')(x)
+    # x = Dropout(rate=.5)(x)
+
+    x = Dense(128, activation='linear')(x)
+    x = Dropout(.5)(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(.5)(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dense(32, activation='linear')(x)
 
     preds = Dense(units=output_shape, activation='softmax')(x)
 
     # Compile architecture
     classification_model = Model(sequence_input, preds)
+    optimizer = Adam(beta_1=.7, beta_2=.99)
     classification_model.compile(loss='categorical_crossentropy',
-                                 optimizer='rmsprop',
+                                 optimizer=optimizer,
                                  metrics=['acc'])
 
     return classification_model

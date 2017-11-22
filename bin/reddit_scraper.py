@@ -45,7 +45,7 @@ def scrape_subreddit(subreddit_name, num_days):
 
     # Iterate through posts chronologically
     for index, submission in enumerate(subreddit.submissions(start_datetime_unix, end_datetime_unix)):
-        logging.info('Working number {}, submission: '.format(index, submission))
+        logging.debug('Working submission index {}'.format(index))
 
         # Parse each submission and extract essential fields
         parsed_submission = submission_parser(submission)
@@ -58,6 +58,7 @@ def scrape_subreddit(subreddit_name, num_days):
     # Create DataFrame from pulled data
     posts = pandas.DataFrame(parsed_submission_agg)
 
+    logging.info('Completed scrape of subreddit: {}'.format(subreddit_name))
     # Return
     return posts
 

@@ -92,4 +92,44 @@ Prioritized backlog
  - Vary number of layers
  - Change to another subreddit
    - Possibly [https://www.reddit.com/r/todayilearned/][https://www.reddit.com/r/todayilearned/]
+
+Optimizer
+
+ - Trying `optimizer = Adam(beta_1=.7, beta_2=.99)`, with added linear activation layer
+ - Switched optimizer
+ 
+Layers
+
+ - Moving everything into a ipynb
+  - Using `reload` builtin command to reload models.py file
+ - Ideas
+   - Linear layers
+   - Different bins
+   - Dropout (high probability)
+   
+   
+ - Attempting simple model w/ only dropout and dense hidden layers
+   - Adding `flatten` so shape is correct
+   - Model is guessing other classes!
+   
+ - Adding more layers. Dense, Dropout, Dense, Dropout, Dense, Dense
+   - Falling back to guessing majority case
+ 
+ Moderately deep model w/ 1000 days
+ 
+```
+10.000000     16409
+50.000000       158
+100.000000       96
+inf              27
+Name: modeling_prediction, dtype: int64
+
+10.000000     14830
+50.000000      1610
+100.000000      170
+inf              80
+Name: bin_max, dtype: int64
+```
+   
+  
  
